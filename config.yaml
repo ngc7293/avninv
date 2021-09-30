@@ -1,0 +1,10 @@
+database:
+  user:
+  password:
+  host:
+  database:
+
+server:
+  addresses:
+    - '[::]:9320'
+    - '0.0.0.0:9320'
