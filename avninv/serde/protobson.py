@@ -1,6 +1,7 @@
 """Protobuf-to-BSON and BSON-to-Protobuf serde"""
 
 from google.protobuf.descriptor import FieldDescriptor
+from google.protobuf.reflection import MakeClass
 
 
 def protobuf_to_bson(message):
@@ -23,7 +24,8 @@ def protobuf_to_bson(message):
     return bson
 
 
-def bson_to_protobuf(bson, cls):
+def bson_to_protobuf(bson, cls=None, descriptor=None):
+    cls = cls or MakeClass(descriptor)
     message = cls()
     fields = {field.number: field for field in cls.DESCRIPTOR.fields}
 
@@ -35,12 +37,12 @@ def bson_to_protobuf(bson, cls):
             repeated = getattr(message, fields[int(id)].name)
             for subfield in bson[id]:
                 if isinstance(bson[id][0], dict) and fields[int(id)].message_type is not None:
-                    repeated.add().CopyFrom(bson_to_protobuf(subfield, getattr(cls, fields[int(id)].message_type.name)))
+                    repeated.add().CopyFrom(bson_to_protobuf(subfield, descriptor=fields[int(id)].message_type))
                 else:
                     repeated.append(subfield)
         elif isinstance(bson[id], dict):
             if fields[int(id)].message_type is not None:
-                nested = bson_to_protobuf(bson[id], getattr(cls, fields[int(id)].message_type.name))
+                nested = bson_to_protobuf(bson[id], descriptor=fields[int(id)].message_type)
                 getattr(message, fields[int(id)].name).CopyFrom(nested)
         else:
             setattr(message, fields[int(id)].name, bson[id])
