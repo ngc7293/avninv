@@ -56,6 +56,9 @@ def test_GetPart(service):
     id = service.AddPart(AddPartRequest(details=p1)).id
     result = service.GetPart(GetPartRequest(id=id))
 
+    assert len(result.details.id) == 24
+
+    result.details.id = ''  # Clear the ID because we cant predict it
     assert result.details == p1
 
 

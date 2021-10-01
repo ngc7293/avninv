@@ -44,8 +44,16 @@ message GetPartResponse {
     PartDetails details = 1;
 }
 
+message RemovePartRequest {
+    string id = 1;
+}
+
+message RemovePartResponse {
+}
+
 /** Service **/
 service Catalog {
     rpc AddPart(AddPartRequest) returns (AddPartResponse);
     rpc GetPart(GetPartRequest) returns (GetPartResponse);
+    rpc RemovePart(RemovePartRequest) returns (RemovePartResponse);
 }

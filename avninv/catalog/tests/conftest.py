@@ -1,5 +1,6 @@
 import concurrent.futures
 import uuid
+import os
 
 import grpc
 import pymongo
@@ -11,14 +12,22 @@ from avninv.catalog.catalog import CatalogService
 from avninv.catalog.proto.catalog_pb2_grpc import add_CatalogServicer_to_server, CatalogStub
 
 
-def make_mongo_uri(config):
-    return f"mongodb+srv://{config['user']}:{config['password']}@{config['host']}/{config['database']}?retryWrites=true&w=majority"
+class ConfigNotFoundException(Exception):
+    pass
+
+
+def _get_config():
+    paths = ['config.test.yaml', 'config.test.ci.yaml']
+    for path in paths:
+        if os.path.isfile(path):
+            return open(path, 'r')
+    raise ConfigNotFoundException
 
 
 @pytest.fixture
 def service():
-    config = yaml.load(open('config.test.yaml', 'r'), Loader=yaml.CLoader)
-    client = pymongo.MongoClient(make_mongo_uri(config['database']))
+    config = yaml.load(_get_config(), Loader=yaml.CLoader)
+    client = pymongo.MongoClient(config['database'][0], serverSelectionTimeoutMS=1000)
     collection = str(uuid.uuid4())
 
     client['catalog-test'].create_collection(collection)

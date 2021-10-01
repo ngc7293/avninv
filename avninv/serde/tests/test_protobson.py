@@ -1,5 +1,6 @@
 """Test for the Protobuf-to-BSON serde"""
 
+from bson.objectid import ObjectId
 from google.protobuf.json_format import MessageToDict
 
 from avninv.serde.protobson import bson_to_protobuf, protobuf_to_bson
@@ -57,6 +58,7 @@ def test_protobuf_to_bson_handles_missing_and_default_fields():
 
 def test_bson_to_protobuf():
     b1 = {
+        '_id': '1' * 24,
         '1': 'alpha',
         '2': 200,
         '3': {'1': -1, '2': b'bytes'},
@@ -79,7 +81,8 @@ def test_bson_to_protobuf():
         ],
         repeated_string_field_5=[
             'bravo', 'charlie'
-        ]
+        ],
+        id='1' * 24
     )
 
 

@@ -19,4 +19,6 @@ message _TestMessage {
 
     repeated _NestedTestMessage repeated_nested_field_4 = 4;
     repeated string repeated_string_field_5 = 5;
+
+    string id = 10;
 }

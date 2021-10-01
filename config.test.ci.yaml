@@ -1,0 +1,7 @@
+database:
+  - 'mongodb://localhost:27017'
+
+server:
+  addresses:
+    - '[::]:9320'
+    - '0.0.0.0:9320'

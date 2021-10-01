@@ -14,10 +14,6 @@ from avninv.catalog.catalog import CatalogService
 from avninv.catalog.proto.catalog_pb2_grpc import add_CatalogServicer_to_server
 
 
-def make_mongo_uri(config):
-    return f"mongodb+srv://{config['user']}:{config['password']}@{config['host']}/{config['database']}?retryWrites=true&w=majority"
-
-
 def main(args):
     if not os.path.exists(args.config):
         print(f'Could not find file {args.config}')
@@ -25,7 +21,7 @@ def main(args):
 
     config = yaml.load(open(args.config, 'r'), Loader=yaml.CLoader)
 
-    client = pymongo.MongoClient(make_mongo_uri(config['database']))
+    client = pymongo.MongoClient(config['database'][0])
     service = CatalogService(client['catalog']['parts'])
 
     server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=10))
