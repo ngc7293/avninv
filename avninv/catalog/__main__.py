@@ -11,7 +11,7 @@ import pymongo
 import yaml
 
 from avninv.catalog.catalog import CatalogService
-from avninv.catalog.proto.catalog_pb2_grpc import add_CatalogServicer_to_server
+from avninv.catalog.v1.catalog_pb2_grpc import add_CatalogServicer_to_server
 
 
 def main(args):

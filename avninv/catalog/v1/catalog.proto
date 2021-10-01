@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package avninv.catalog.v1;
+
+// import "google/api/http.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/field_mask.proto";
+
+/** Service **/
+service Catalog {
+    rpc ListParts(ListPartRequest) returns (ListPartResponse) {
+        option (google.api.http) = {
+            get: "/v1/{parent=org/*}/parts"
+        };
+    };
+
+    rpc GetPart(GetPartRequest) returns (Part) {
+        option (google.api.http) = {
+            get: "/v1/{name=org/*/parts/*}"
+        };
+    };
+
+    rpc CreatePart(CreatePartRequest) returns (Part) {
+        option (google.api.http) = {
+            post: "/v1/{parent=org/*}/parts"
+            body: "part"
+        };
+    };
+
+    rpc UpdatePart(UpdatePartRequest) returns (Part) {
+        option (google.api.http) = {
+            patch: "/v1/{name=org/*/parts/*}"
+            body: "part"
+        };
+    };
+
+    rpc DeletePart(DeletePartRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/v1/{name=org/*/parts/*}"
+        };
+    };
+}
+
+/** Requests **/
+message ListPartRequest {
+    string parent = 1;
+    int32 page_size = 2;
+    string page_token = 3;
+}
+
+message ListPartResponse {
+    repeated Part parts = 1;
+    string next_page_token = 2;
+}
+
+message GetPartRequest {
+    string name = 1;
+}
+
+message CreatePartRequest {
+    Part part = 1;
+}
+
+message UpdatePartRequest {
+    string name = 1;
+    Part part = 2;
+    google.protobuf.FieldMask update_mask = 3;
+}
+
+message DeletePartRequest {
+    string name = 1;
+}
+
+/** Data structures **/
+message PartAttribute {
+    string attribute = 1;
+    string unit = 2;
+    optional double numeric_value = 3;
+    string value = 4;
+}
+
+message PartSupplier {
+    string supplier = 1;
+    string supplier_part_number = 2;
+    string url = 3;
+}
+
+message Part {
+    string name = 1;
+    string manufacturer_part_number = 2;
+    string type = 3;
+
+    string description = 4;
+
+    repeated PartAttribute attributes = 5;
+    repeated PartSupplier suppliers = 6;
+}

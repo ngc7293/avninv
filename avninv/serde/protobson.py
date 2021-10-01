@@ -39,7 +39,7 @@ def bson_to_protobuf(bson, cls=None, descriptor=None, map_id=True):
     id_field = _get_id_field_number(cls.DESCRIPTOR)
 
     for key in bson:
-        if key == '_id':
+        if key == '_id' and id_field is not None:
             setattr(message, fields[id_field].name, str(bson[key]))
 
         if not key.isdigit() or int(key) not in fields:

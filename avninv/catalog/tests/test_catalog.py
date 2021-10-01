@@ -1,17 +1,16 @@
 
 import grpc
-from grpc_status import rpc_status
 
-from avninv.catalog.proto.catalog_pb2 import AddPartRequest, GetPartRequest, PartAttributes, PartDetails, PartSupplier
+from avninv.catalog.v1.catalog_pb2 import CreatePartRequest, GetPartRequest, PartAttribute, Part, PartSupplier
 
 
-def test_AddPart(service):
-    p1 = PartDetails(
+def test_CreatePart(service):
+    p1 = Part(
         manufacturer_part_number='mfg_01',
         type='resistance',
         description='RES 10K 0502',
         attributes=[
-            PartAttributes(
+            PartAttribute(
                 attribute='Resistance',
                 unit='Ohms',
                 numeric_value=10e3,
@@ -27,17 +26,18 @@ def test_AddPart(service):
         ]
     )
 
-    result = service.AddPart(AddPartRequest(details=p1))
-    assert result.id != ''
+    result = service.CreatePart(CreatePartRequest(part=p1))
+    assert result.name.startswith('org/main/parts/')
+    assert len(result.name.split('/')[-1]) == 24
 
 
 def test_GetPart(service):
-    p1 = PartDetails(
+    p1 = Part(
         manufacturer_part_number='mfg_01',
         type='resistance',
         description='RES 10K 0502',
         attributes=[
-            PartAttributes(
+            PartAttribute(
                 attribute='Resistance',
                 unit='Ohms',
                 numeric_value=10e3,
@@ -53,18 +53,16 @@ def test_GetPart(service):
         ]
     )
 
-    id = service.AddPart(AddPartRequest(details=p1)).id
-    result = service.GetPart(GetPartRequest(id=id))
+    name = service.CreatePart(CreatePartRequest(part=p1)).name
+    p1.name = name
 
-    assert len(result.details.id) == 24
-
-    result.details.id = ''  # Clear the ID because we cant predict it
-    assert result.details == p1
+    result = service.GetPart(GetPartRequest(name=name))
+    assert result == p1
 
 
 def test_GetPart_returns_not_found_if_invalid_id(service):
     try:
-        service.GetPart(GetPartRequest(id='0' * 24))
+        service.GetPart(GetPartRequest(name='org/main/parts/' + '0' * 24))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.NOT_FOUND, error.details()
