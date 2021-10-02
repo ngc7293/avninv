@@ -12,7 +12,12 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Compile protobuf
-        run: ./setup.sh
+        run: ./BUILD.sh
         
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.6.0
+        with:
+          mongodb-version: 5.0
+
       - name: Run Unit tests
         run: pytest -v

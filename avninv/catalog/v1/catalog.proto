@@ -59,7 +59,8 @@ message GetPartRequest {
 }
 
 message CreatePartRequest {
-    Part part = 1;
+    string parent = 1;
+    Part part = 2;
 }
 
 message UpdatePartRequest {
