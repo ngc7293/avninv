@@ -26,8 +26,8 @@ def test_CreatePart(service):
         ]
     )
 
-    result = service.CreatePart(CreatePartRequest(parent='org/main/parts', part=p1))
-    assert result.name.startswith('org/main/parts/')
+    result = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1))
+    assert result.name.startswith('orgs/main/parts/')
     assert len(result.name.split('/')[-1]) == 24
 
 
@@ -53,7 +53,7 @@ def test_GetPart(service):
         ]
     )
 
-    name = service.CreatePart(CreatePartRequest(parent='org/main/parts', part=p1)).name
+    name = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name
     p1.name = name
 
     result = service.GetPart(GetPartRequest(name=name))
@@ -62,7 +62,7 @@ def test_GetPart(service):
 
 def test_GetPart_returns_not_found_if_part_doesnt_exist(service):
     try:
-        service.GetPart(GetPartRequest(name='org/main/parts/' + '0' * 24))
+        service.GetPart(GetPartRequest(name='orgs/main/parts/' + '0' * 24))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.NOT_FOUND, error.details()
@@ -70,7 +70,7 @@ def test_GetPart_returns_not_found_if_part_doesnt_exist(service):
 
 def test_GetPart_returns_invalid_if_invalid_id(service):
     try:
-        service.GetPart(GetPartRequest(name='org/main/parts/notanid'))
+        service.GetPart(GetPartRequest(name='orgs/main/parts/notanid'))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.INVALID_ARGUMENT, error.details()
@@ -78,7 +78,7 @@ def test_GetPart_returns_invalid_if_invalid_id(service):
 
 def test_GetPart_returns_invalid_argument_if_org_invalid(service):
     try:
-        service.GetPart(GetPartRequest(name='org/wack/parts/' + '0' * 24))
+        service.GetPart(GetPartRequest(name='orgs/wack/parts/' + '0' * 24))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.INVALID_ARGUMENT, error.details()
@@ -86,13 +86,13 @@ def test_GetPart_returns_invalid_argument_if_org_invalid(service):
 
 def test_GetPart_returns_invalid_argument_if_path_invalid(service):
     try:
-        service.GetPart(GetPartRequest(name='org/wack/main/parts/' + '0' * 24))
+        service.GetPart(GetPartRequest(name='orgs/wack/main/parts/' + '0' * 24))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.INVALID_ARGUMENT, error.details()
 
     try:
-        service.GetPart(GetPartRequest(name='org/main/wack/' + '0' * 24))
+        service.GetPart(GetPartRequest(name='org/smain/wack/' + '0' * 24))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.INVALID_ARGUMENT, error.details()
@@ -105,14 +105,14 @@ def test_DeletePart(service):
         description='RES 10K 0502',
     )
 
-    name = service.CreatePart(CreatePartRequest(parent='org/main/parts', part=p1)).name
+    name = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name
     service.GetPart(GetPartRequest(name=name))
     service.DeletePart(DeletePartRequest(name=name))
 
 
 def test_DeletePart_returns_not_found_if_part_doesnt_exist(service):
     try:
-        service.DeletePart(DeletePartRequest(name='org/main/parts/' + '0' * 24))
+        service.DeletePart(DeletePartRequest(name='orgs/main/parts/' + '0' * 24))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.NOT_FOUND, error.details()
@@ -120,7 +120,7 @@ def test_DeletePart_returns_not_found_if_part_doesnt_exist(service):
 
 def test_DeletePart_returns_invalid_if_invalid_id(service):
     try:
-        service.DeletePart(DeletePartRequest(name='org/main/parts/notanid'))
+        service.DeletePart(DeletePartRequest(name='orgs/main/parts/notanid'))
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.INVALID_ARGUMENT, error.details()

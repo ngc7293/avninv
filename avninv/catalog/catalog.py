@@ -21,7 +21,7 @@ class CatalogService(CatalogServicer):
             id = self.collection.insert(bson)
             bson = self.collection.get(id)
             part = bson_to_protobuf(bson, Part)
-            part.name = f'org/main/parts/{str(bson["_id"])}'
+            part.name = f'orgs/main/parts/{str(bson["_id"])}'
             return part
         except ApiError as err:
             context.abort(err.status, err.message)
@@ -39,7 +39,7 @@ class CatalogService(CatalogServicer):
             _, oid = self._validate_name(request.name, require_org='main')
             bson = self.collection.get(oid)
             part = bson_to_protobuf(bson, Part)
-            part.name = f'org/main/parts/{str(bson["_id"])}'
+            part.name = f'orgs/main/parts/{str(bson["_id"])}'
             return part
         except ApiError as err:
             context.abort(err.status, err.message)
@@ -51,7 +51,7 @@ class CatalogService(CatalogServicer):
             parts = []
             for bson in bsons:
                 part = bson_to_protobuf(bson, Part)
-                part.name = f'org/main/parts/{str(bson["_id"])}'
+                part.name = f'orgs/main/parts/{str(bson["_id"])}'
                 parts.append(part)
             return ListPartResponse(parts=parts)
         except ApiError as err:
@@ -66,7 +66,7 @@ class CatalogService(CatalogServicer):
             raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid parent')
 
         tok1, org, tok2 = tokens
-        if tok1 != 'org' or tok2 != 'parts':
+        if tok1 != 'orgs' or tok2 != 'parts':
             raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid parent')
 
         if require_org and org != require_org:
@@ -79,7 +79,7 @@ class CatalogService(CatalogServicer):
             raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid parent')
 
         tok1, org, tok2, name = tokens
-        if tok1 != 'org' or tok2 != 'parts':
+        if tok1 != 'orgs' or tok2 != 'parts':
             raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid name')
 
         if require_org and org != require_org:

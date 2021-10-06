@@ -51,5 +51,5 @@ static_resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: 0.0.0.0
+                    address: 10.31.0.124
                     port_value: 9320
