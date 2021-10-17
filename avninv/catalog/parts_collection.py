@@ -16,6 +16,23 @@ class PartCollection:
             oid = ObjectId(oid)
         return oid
 
+    def update(self, oid, bson):
+        oid = self._validate_oid(oid)
+        try:
+            print(bson)
+            result = self.db.update_one({'_id': oid}, {'$set': bson['$set'], '$unset': bson['$unset']})
+            if result.matched_count == 0:
+                raise ApiError(StatusCode.NOT_FOUND, 'No such part')
+
+            if result.matched_count != 1 or result.modified_count != 1:
+                print(f'error updating path: matched or modified more than one')
+
+            self.db.update_one({'_id': oid}, {'$pull': bson['$pull']})
+
+        except PyMongoError as err:
+            print(f'error updating part: {str(err)}', file=stderr)
+            raise ApiError(StatusCode.INTERNAL, 'Internal error')
+
     def delete(self, oid):
         oid = self._validate_oid(oid)
         try:

@@ -9,5 +9,5 @@ __pycache__
 .vscode
 
 # Secrets
-config.*.yaml
-!config.test.ci.yaml
+etc/config.*.yaml
+!etc/config.test.ci.yaml

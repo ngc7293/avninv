@@ -1,7 +1,8 @@
 
+from google.protobuf.field_mask_pb2 import FieldMask
 import grpc
 
-from avninv.catalog.v1.catalog_pb2 import CreatePartRequest, DeletePartRequest, GetPartRequest, PartAttribute, Part, PartSupplier
+from avninv.catalog.v1.catalog_pb2 import CreatePartRequest, DeletePartRequest, GetPartRequest, PartAttribute, Part, PartSupplier, UpdatePartRequest
 
 
 def test_CreatePart(service):
@@ -124,3 +125,81 @@ def test_DeletePart_returns_invalid_if_invalid_id(service):
         assert False, 'Should have hit exception!'
     except grpc.RpcError as error:
         assert error.code() == grpc.StatusCode.INVALID_ARGUMENT, error.details()
+
+
+def test_UpdatePart(service):
+    p1 = Part(
+        manufacturer_part_number='mfg_01',
+        type='resistance',
+        description='RES 10K 0502',
+        attributes=[
+            PartAttribute(
+                attribute='Resistance',
+                unit='Ohms',
+                numeric_value=10e3,
+                value='10k'
+            ),
+            PartAttribute(
+                attribute='Footprint',
+                value='0502'
+            )
+        ],
+        suppliers=[
+            PartSupplier(
+                supplier='digikey',
+                supplier_part_number='DIG0001',
+                url='https://digikey.ca/wee'
+            ),
+            PartSupplier(
+                supplier='mouser',
+                supplier_part_number='MOUS0001',
+                url='https://mouser.ca/woo'
+            )
+        ]
+    )
+
+    name = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name
+    
+    p2 = Part(
+        description='RES 10K 0203',
+        attributes=[
+            PartAttribute(),
+            PartAttribute(
+                value='0203'
+            )
+        ]
+    )
+    masks = [
+        'description',
+        'attributes.1.value',
+        'suppliers.0'
+    ]
+
+    service.UpdatePart(UpdatePartRequest(name=name, part=p2, update_mask=FieldMask(paths=masks)))
+    result = service.GetPart(GetPartRequest(name=name))
+    result.name = ''
+
+    assert result == Part(
+        manufacturer_part_number='mfg_01',
+        type='resistance',
+        description='RES 10K 0203',
+        attributes=[
+            PartAttribute(
+                attribute='Resistance',
+                unit='Ohms',
+                numeric_value=10e3,
+                value='10k'
+            ),
+            PartAttribute(
+                attribute='Footprint',
+                value='0203'
+            )
+        ],
+        suppliers=[
+            PartSupplier(
+                supplier='mouser',
+                supplier_part_number='MOUS0001',
+                url='https://mouser.ca/woo'
+            )
+        ]
+    )

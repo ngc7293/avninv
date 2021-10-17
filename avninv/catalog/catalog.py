@@ -6,7 +6,7 @@ from avninv.catalog.parts_collection import PartCollection
 from avninv.catalog.v1.catalog_pb2 import ListPartResponse, Part
 from avninv.catalog.v1.catalog_pb2_grpc import CatalogServicer
 from avninv.error.api_error import ApiError, StatusCode
-from avninv.serde.protobson import bson_to_protobuf, protobuf_to_bson
+from avninv.serde.protobson import bson_to_protobuf, protobuf_to_bson, protobuf_to_update_document
 
 
 class CatalogService(CatalogServicer):
@@ -58,7 +58,16 @@ class CatalogService(CatalogServicer):
             context.abort(err.status, err.message)
 
     def UpdatePart(self, request, context):
-        return super().UpdatePart(request, context)
+        try:
+            _, oid = self._validate_name(request.name, require_org='main')
+            bson = protobuf_to_update_document(request.part, fields_mask=request.update_mask.paths)
+            self.collection.update(oid, bson)
+            bson = self.collection.get(oid)
+            part = bson_to_protobuf(bson, Part)
+            part.name = f'orgs/main/parts/{str(bson["_id"])}'
+            return part
+        except ApiError as err:
+            context.abort(err.status, err.message)
 
     def _validate_parent(self, parent, require_org=None):
         tokens = parent.split('/')

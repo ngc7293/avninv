@@ -17,7 +17,7 @@ class ConfigNotFoundException(Exception):
 
 
 def _get_config():
-    paths = ['config.test.yaml', 'config.test.ci.yaml']
+    paths = ['etc/config.test.yaml', 'etc/config.test.ci.yaml']
     for path in paths:
         if os.path.isfile(path):
             return open(path, 'r')
@@ -39,4 +39,4 @@ def service():
     server.start()
     yield CatalogStub(grpc.insecure_channel('0.0.0.0:9321'))
     server.stop(0)
-    client['catalog-test'].drop_collection(collection)
+    # client['catalog-test'].drop_collection(collection)
