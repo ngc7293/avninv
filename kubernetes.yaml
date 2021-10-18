@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
       - name: catalog
-        image: gcr.io/clubrockets/avninv/catalog:0.0.1
+        image: gcr.io/clubrockets/avninv/catalog:0.0.2
         resources:
           requests:
             memory: "32Mi"

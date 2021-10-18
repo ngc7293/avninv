@@ -8,7 +8,7 @@ RUN pip install -r requirements.txt
 
 COPY avninv /opt/avninv/avninv
 COPY google /opt/avninv/google
-COPY config.docker.yaml /opt/avninv/config.docker.yaml
+COPY etc/config.docker.yaml /opt/avninv/config.docker.yaml
 RUN ./BUILD.sh
 
 WORKDIR /opt/avninv
