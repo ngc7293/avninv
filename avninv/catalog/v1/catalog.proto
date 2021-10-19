@@ -9,35 +9,69 @@ import "google/protobuf/field_mask.proto";
 
 /** Service **/
 service Catalog {
+    /** Parts **/
     rpc ListParts(ListPartRequest) returns (ListPartResponse) {
         option (google.api.http) = {
-            get: "/v1/{parent=org/*}/parts"
+            get: "/v1/{parent=orgs/*}/parts"
         };
     };
 
     rpc GetPart(GetPartRequest) returns (Part) {
         option (google.api.http) = {
-            get: "/v1/{name=org/*/parts/*}"
+            get: "/v1/{name=orgs/*/parts/*}"
         };
     };
 
     rpc CreatePart(CreatePartRequest) returns (Part) {
         option (google.api.http) = {
-            post: "/v1/{parent=org/*}/parts"
+            post: "/v1/{parent=orgs/*}/parts"
             body: "part"
         };
     };
 
     rpc UpdatePart(UpdatePartRequest) returns (Part) {
         option (google.api.http) = {
-            patch: "/v1/{name=org/*/parts/*}"
+            patch: "/v1/{name=orgs/*/parts/*}"
             body: "part"
         };
     };
 
     rpc DeletePart(DeletePartRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-            delete: "/v1/{name=org/*/parts/*}"
+            delete: "/v1/{name=orgs/*/parts/*}"
+        };
+    };
+
+    /** PartSchemas **/
+    rpc ListPartSchemas(ListPartSchemaRequest) returns (ListPartSchemaResponse) {
+        option (google.api.http) = {
+            get: "/v1/{parent=orgs/*}/partschemas"
+        };
+    };
+
+    rpc GetPartSchema(GetPartSchemaRequest) returns (PartSchema) {
+        option (google.api.http) = {
+            get: "/v1/{name=orgs/*/partschemas/*}"
+        };
+    };
+
+    rpc CreatePartSchema(CreatePartSchemaRequest) returns (PartSchema) {
+        option (google.api.http) = {
+            post: "/v1/{parent=orgs/*}/partschemas"
+            body: "part_schema"
+        };
+    };
+
+    rpc UpdatePartSchema(UpdatePartSchemaRequest) returns (PartSchema) {
+        option (google.api.http) = {
+            patch: "/v1/{name=orgs/*/partschemas/*}"
+            body: "part_schema"
+        };
+    };
+
+    rpc DeletePartSchema(DeletePartSchemaRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/v1/{name=orgs/*/partschemas/*}"
         };
     };
 }
@@ -73,6 +107,36 @@ message DeletePartRequest {
     string name = 1;
 }
 
+message ListPartSchemaRequest {
+    string parent = 1;
+    int32 page_size = 2;
+    string page_token = 3;
+}
+
+message ListPartSchemaResponse {
+    repeated PartSchema parts = 1;
+    string next_page_token = 2;
+}
+
+message GetPartSchemaRequest {
+    string name = 1;
+}
+
+message CreatePartSchemaRequest {
+    string parent = 1;
+    PartSchema part = 2;
+}
+
+message UpdatePartSchemaRequest {
+    string name = 1;
+    PartSchema part = 2;
+    google.protobuf.FieldMask update_mask = 3;
+}
+
+message DeletePartSchemaRequest {
+    string name = 1;
+}
+
 /** Data structures **/
 message PartAttribute {
     string attribute = 1;
@@ -88,12 +152,36 @@ message PartSupplier {
 }
 
 message Part {
+    // Output only.
     string name = 1;
+
     string manufacturer_part_number = 2;
-    string type = 3;
+    string schema_name = 3;
 
     string description = 4;
+    uint64 quantity = 5;
 
-    repeated PartAttribute attributes = 5;
-    repeated PartSupplier suppliers = 6;
+    repeated PartAttribute attributes = 6;
+    repeated PartSupplier suppliers = 7;
+}
+
+message PartAttributeSchema {
+    enum Type {
+        TYPE_UNSPECIFIED = 0;
+        NUMERIC = 1;
+        INTEGER = 2;
+        STRING = 3;
+    };
+
+    string attribute = 1;
+    string unit = 2;
+    Type type = 3;
+}
+
+message PartSchema {
+    // Output only.
+    string name = 1;
+
+    string display_name = 2;
+    repeated PartAttributeSchema attributes = 3;
 }

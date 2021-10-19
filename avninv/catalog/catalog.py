@@ -69,28 +69,30 @@ class CatalogService(CatalogServicer):
         except ApiError as err:
             context.abort(err.status, err.message)
 
-    def _validate_parent(self, parent, require_org=None):
+    @staticmethod
+    def _validate_path(tokens, hierarchy):
+        if len(tokens) != len(hierarchy):
+            return False, None
+        for depth, (expected, actual) in enumerate(zip(hierarchy, tokens)):
+            if expected and actual != expected:
+                return False, depth
+        return True, None
+
+    @staticmethod
+    def _validate_parent(parent, require_org=None):
         tokens = parent.split('/')
-        if len(tokens) != 3:
+        valid, _ = CatalogService._validate_path(tokens, ['orgs', require_org, 'parts'])
+        
+        if not valid:
             raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid parent')
+        return tokens[1]
 
-        tok1, org, tok2 = tokens
-        if tok1 != 'orgs' or tok2 != 'parts':
-            raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid parent')
-
-        if require_org and org != require_org:
-            raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid organization')
-        return org
-
-    def _validate_name(self, name, require_org=None):
+    @staticmethod
+    def _validate_name(name, require_org=None):
         tokens = name.split('/')
-        if len(tokens) != 4:
-            raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid parent')
-
-        tok1, org, tok2, name = tokens
-        if tok1 != 'orgs' or tok2 != 'parts':
+        valid, _ = CatalogService._validate_path(tokens, ['orgs', require_org, 'parts', None])
+        
+        if not valid:
             raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid name')
-
-        if require_org and org != require_org:
-            raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid organization')
-        return org, name
+        return tokens[1], tokens[3]
+        

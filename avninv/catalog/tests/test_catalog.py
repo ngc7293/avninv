@@ -1,14 +1,44 @@
 
 from google.protobuf.field_mask_pb2 import FieldMask
 import grpc
+import pytest
 
+from avninv.catalog.catalog import CatalogService
 from avninv.catalog.v1.catalog_pb2 import CreatePartRequest, DeletePartRequest, GetPartRequest, PartAttribute, Part, PartSupplier, UpdatePartRequest
+from avninv.error.api_error import ApiError
 
+@pytest.mark.parametrize("path,valid", [
+    ('org/main/parts/wee', False),
+    ('org/main/parts',     False),
+    ('orgs/other/parts',   False),
+    ('orgs/main/part',     False),
+    ('orgs/main/parts',    True)
+])
+def test_validate_parent(path, valid):
+    if not valid:
+        with pytest.raises(ApiError):
+            CatalogService._validate_parent(path, 'main')
+    else:
+        assert CatalogService._validate_parent(path, 'main') == 'main'
+
+@pytest.mark.parametrize("path,valid", [
+    ('org/main/parts',       False),
+    ('org/main/parts/wee',   False),
+    ('orgs/other/parts/wee', False),
+    ('orgs/main/part/wee',   False),
+    ('orgs/main/parts/wee',  True)
+])
+def test_validate_name(path, valid):
+    if not valid:
+        with pytest.raises(ApiError):
+            CatalogService._validate_name(path, 'main')
+    else:
+        assert CatalogService._validate_name(path, 'main') == ('main', 'wee')
 
 def test_CreatePart(service):
     p1 = Part(
         manufacturer_part_number='mfg_01',
-        type='resistance',
+        schema_name='resistance',
         description='RES 10K 0502',
         attributes=[
             PartAttribute(
@@ -35,7 +65,7 @@ def test_CreatePart(service):
 def test_GetPart(service):
     p1 = Part(
         manufacturer_part_number='mfg_01',
-        type='resistance',
+        schema_name='resistance',
         description='RES 10K 0502',
         attributes=[
             PartAttribute(
@@ -102,7 +132,7 @@ def test_GetPart_returns_invalid_argument_if_path_invalid(service):
 def test_DeletePart(service):
     p1 = Part(
         manufacturer_part_number='mfg_01',
-        type='resistance',
+        schema_name='resistance',
         description='RES 10K 0502',
     )
 
@@ -130,7 +160,7 @@ def test_DeletePart_returns_invalid_if_invalid_id(service):
 def test_UpdatePart(service):
     p1 = Part(
         manufacturer_part_number='mfg_01',
-        type='resistance',
+        schema_name='resistance',
         description='RES 10K 0502',
         attributes=[
             PartAttribute(
@@ -181,7 +211,7 @@ def test_UpdatePart(service):
 
     assert result == Part(
         manufacturer_part_number='mfg_01',
-        type='resistance',
+        schema_name='resistance',
         description='RES 10K 0203',
         attributes=[
             PartAttribute(
