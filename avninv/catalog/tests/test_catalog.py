@@ -4,8 +4,11 @@ import grpc
 import pytest
 
 from avninv.catalog.catalog import CatalogService
-from avninv.catalog.v1.catalog_pb2 import CreatePartRequest, DeletePartRequest, GetPartRequest, PartAttribute, Part, PartSupplier, UpdatePartRequest
+from avninv.catalog.v1.catalog_pb2 import (
+    CreatePartRequest, DeletePartRequest, GetPartRequest, PartAttribute, Part, PartSupplier, UpdatePartRequest
+)
 from avninv.error.api_error import ApiError
+
 
 @pytest.mark.parametrize("path,valid", [
     ('org/main/parts/wee', False),
@@ -21,6 +24,7 @@ def test_validate_parent(path, valid):
     else:
         assert CatalogService._validate_parent(path, 'main') == 'main'
 
+
 @pytest.mark.parametrize("path,valid", [
     ('org/main/parts',       False),
     ('org/main/parts/wee',   False),
@@ -34,6 +38,7 @@ def test_validate_name(path, valid):
             CatalogService._validate_name(path, 'main')
     else:
         assert CatalogService._validate_name(path, 'main') == ('main', 'wee')
+
 
 def test_CreatePart(service):
     p1 = Part(
@@ -189,7 +194,7 @@ def test_UpdatePart(service):
     )
 
     name = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name
-    
+
     p2 = Part(
         description='RES 10K 0203',
         attributes=[

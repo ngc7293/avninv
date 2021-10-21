@@ -1,77 +1,55 @@
-from sys import stderr
+import logging
 
-from avninv.error.api_error import ApiError, StatusCode
-from bson.objectid import ObjectId
 from pymongo.errors import PyMongoError
+
+from avninv.catalog.v1.catalog_pb2 import Part
+from avninv.catalog.collection import Collection, DocumentNotFound, InvalidOid
+from avninv.error.api_error import ApiError, StatusCode
+from avninv.serde.protobson import (
+    protobuf_to_bson, protobuf_to_update_document, bson_to_protobuf
+)
 
 
 class PartCollection:
     def __init__(self, collection):
-        self.db = collection
+        self.collection = Collection(collection)
 
-    def _validate_oid(self, oid):
-        if not isinstance(oid, ObjectId):
-            if not ObjectId.is_valid(oid):
-                raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid ID')
-            oid = ObjectId(oid)
-        return oid
-
-    def update(self, oid, bson):
-        oid = self._validate_oid(oid)
+    def _safe_execute(self, method, *args, **kwargs):
         try:
-            print(bson)
-            result = self.db.update_one({'_id': oid}, {'$set': bson['$set'], '$unset': bson['$unset']})
-            if result.matched_count == 0:
-                raise ApiError(StatusCode.NOT_FOUND, 'No such part')
+            return method(*args, **kwargs)
 
-            if result.matched_count != 1 or result.modified_count != 1:
-                print(f'error updating path: matched or modified more than one')
+        except DocumentNotFound:
+            raise ApiError(StatusCode.NOT_FOUND, 'No such part')
 
-            self.db.update_one({'_id': oid}, {'$pull': bson['$pull']})
+        except InvalidOid:
+            raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid name')
 
         except PyMongoError as err:
-            print(f'error updating part: {str(err)}', file=stderr)
+            logging.error(f'error updating part: {str(err)}')
             raise ApiError(StatusCode.INTERNAL, 'Internal error')
+
+    def update(self, oid, part, fields_mask):
+        bson = protobuf_to_update_document(part, fields_mask)
+        self._safe_execute(self.collection.update, oid, bson)
 
     def delete(self, oid):
-        oid = self._validate_oid(oid)
-        try:
-            result = self.db.delete_one({"_id": oid})
-            if result.deleted_count == 0:
-                raise ApiError(StatusCode.NOT_FOUND, 'No such part')
-
-        except PyMongoError as err:
-            print(f'error deleting part: {str(err)}', file=stderr)
-            raise ApiError(StatusCode.INTERNAL, 'Internal error')
+        self._safe_execute(self.collection.delete, oid)
 
     def insert(self, part):
-        if '_id' in part:
-            raise ApiError(StatusCode.INVALID_ARGUMENT, 'ID is not allowed in Create call')
-
-        try:
-            result = self.db.insert_one(part)
-            return result.inserted_id
-
-        except PyMongoError as err:
-            print(f'error inserting part: {str(err)}', file=stderr)
-            raise ApiError(StatusCode.INTERNAL, 'Internal error')
+        part.name = ''
+        bson = protobuf_to_bson(part)
+        return self._safe_execute(self.collection.insert, bson)
 
     def get(self, oid):
-        oid = self._validate_oid(oid)
-
-        try:
-            bson = self.db.find_one({"_id": oid})
-            if not bson:
-                raise ApiError(StatusCode.NOT_FOUND, 'No such part')
-            return bson
-
-        except PyMongoError as err:
-            print(f'error fetching part: {str(err)}', file=stderr)
-            raise ApiError(StatusCode.INTERNAL, 'Internal error')
+        bson = self._safe_execute(self.collection.get, oid)
+        part = bson_to_protobuf(bson, Part)
+        part.name = f'orgs/main/parts/{str(bson["_id"])}'
+        return part
 
     def list(self):
-        try:
-            return self.db.find()
-        except PyMongoError as err:
-            print(f'error fetching parts: {str(err)}', file=stderr)
-            raise ApiError(StatusCode.INTERNAL, 'Internal error')
+        bsons = self._safe_execute(self.collection.list)
+
+        for bson in bsons:
+            part = bson_to_protobuf(bson, Part)
+            part.name = f'orgs/main/parts/{str(bson["_id"])}'
+            yield part

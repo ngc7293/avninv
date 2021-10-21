@@ -8,7 +8,6 @@ import pytest
 import yaml
 
 from avninv.catalog.catalog import CatalogService
-
 from avninv.catalog.v1.catalog_pb2_grpc import add_CatalogServicer_to_server, CatalogStub
 
 
@@ -35,8 +34,9 @@ def service():
     server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=1))
     add_CatalogServicer_to_server(CatalogService(client['catalog-test'][collection]), server)
     server.add_insecure_port('0.0.0.0:9321')
-
     server.start()
+
     yield CatalogStub(grpc.insecure_channel('0.0.0.0:9321'))
+
     server.stop(0)
-    # client['catalog-test'].drop_collection(collection)
+    client['catalog-test'].drop_collection(collection)

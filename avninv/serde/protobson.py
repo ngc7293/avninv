@@ -50,7 +50,9 @@ def protobuf_to_bson(message, fields_mask=None, preserve_index=False):
             for index, subfield in enumerate(value):
                 if _check_if_index_in_mask(descriptor.name, index, fields_mask):
                     if descriptor.message_type is not None:
-                        repeated.append(protobuf_to_bson(subfield, fields_mask=_subfield_mask(descriptor.name, fields_mask, True)))
+                        repeated.append(
+                            protobuf_to_bson(subfield, fields_mask=_subfield_mask(descriptor.name, fields_mask, True))
+                        )
                     else:
                         repeated.append(subfield)
                 elif preserve_index:
@@ -121,6 +123,7 @@ def _get_field_descriptor_by_name(message_descriptor, name):
         if descriptor.name == name:
             return descriptor
 
+
 def _proto_mask_to_bson_mask(message_descriptor, fields_mask):
     for field in fields_mask:
         tokens = field.split('.')
@@ -135,17 +138,21 @@ def _proto_mask_to_bson_mask(message_descriptor, fields_mask):
             if len(tokens) < 2 or not tokens[1].isdigit():
                 continue
 
-            if descriptor.message_type != None and len(tokens) > 2:
-                for path, indexed in _proto_mask_to_bson_mask(descriptor.message_type, _subfield_mask(tokens[0], fields_mask, True)):
+            if descriptor.message_type is not None and len(tokens) > 2:
+                subfield_mask = _subfield_mask(tokens[0], fields_mask, True)
+
+                for path, indexed in _proto_mask_to_bson_mask(descriptor.message_type, subfield_mask):
                     yield (f'{field_id}.{tokens[1]}.{path}', indexed)
             else:
                 yield (f'{field_id}.{tokens[1]}', True)
 
-        elif descriptor.message_type != None:
+        elif descriptor.message_type is not None:
             if len(tokens) == 1:
                 yield (f'{field_id}', False)
             else:
-                for path, indexed in _proto_mask_to_bson_mask(descriptor.message_type, _subfield_mask(tokens[0], fields_mask)):
+                subfield_mask = _subfield_mask(tokens[0], fields_mask)
+
+                for path, indexed in _proto_mask_to_bson_mask(descriptor.message_type, subfield_mask):
                     yield (f'{field_id}.{path}', indexed)
         else:
             if len(tokens) == 1:

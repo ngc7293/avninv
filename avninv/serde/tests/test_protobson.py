@@ -1,9 +1,10 @@
 """Test for the Protobuf-to-BSON serde"""
 
-from bson.objectid import ObjectId
 from google.protobuf.json_format import MessageToDict
 
-from avninv.serde.protobson import bson_to_protobuf, protobuf_to_bson, _flatten, _proto_mask_to_bson_mask, protobuf_to_update_document
+from avninv.serde.protobson import (
+    bson_to_protobuf, protobuf_to_bson, _flatten, _proto_mask_to_bson_mask, protobuf_to_update_document
+)
 
 from avninv.serde.tests.test_protobson_pb2 import _TestMessage, _OtherTestMessage
 
@@ -70,13 +71,16 @@ def test_protobuf_to_bson_handles_field_masks():
         ]
     )
 
-    b1 = protobuf_to_bson(m1, fields_mask=['uint64_field_2', 'repeated_nested_field_4.0.int64_field_2', 'repeated_string_field_5.1'])
-    
+    b1 = protobuf_to_bson(m1, fields_mask=[
+        'uint64_field_2', 'repeated_nested_field_4.0.int64_field_2', 'repeated_string_field_5.1'
+    ])
+
     assert b1 == {
         '_2': 2,
         '_4': [{'_2': 42}],
         '_5': ['charlie']
     }
+
 
 def test_bson_to_protobuf():
     b1 = {
