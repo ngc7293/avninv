@@ -1,6 +1,7 @@
 import concurrent.futures
 import uuid
 import os
+import random
 
 import grpc
 import pymongo
@@ -42,10 +43,11 @@ def service():
         ),
         server
     )
-    server.add_insecure_port('0.0.0.0:9321')
+    port = random.randint(9000, 9999)  # FIXME: This is a hack more than anything else
+    server.add_insecure_port(f'0.0.0.0:{port}')
     server.start()
 
-    yield CatalogStub(grpc.insecure_channel('0.0.0.0:9321'))
+    yield CatalogStub(grpc.insecure_channel(f'0.0.0.0:{port}'))
 
     server.stop(0)
     client['catalog-test'].drop_collection(parts_collection)
