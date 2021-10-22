@@ -22,7 +22,7 @@ def main(args):
     config = yaml.load(open(args.config, 'r'), Loader=yaml.CLoader)
 
     client = pymongo.MongoClient(config['database'][0])
-    service = CatalogService(client['catalog']['parts'])
+    service = CatalogService(client['catalog']['parts'], client['catalog']['partschemas'])
 
     server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=10))
     add_CatalogServicer_to_server(service, server)

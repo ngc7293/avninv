@@ -114,7 +114,7 @@ message ListPartSchemaRequest {
 }
 
 message ListPartSchemaResponse {
-    repeated PartSchema parts = 1;
+    repeated PartSchema schemas = 1;
     string next_page_token = 2;
 }
 
@@ -124,12 +124,12 @@ message GetPartSchemaRequest {
 
 message CreatePartSchemaRequest {
     string parent = 1;
-    PartSchema part = 2;
+    PartSchema schema = 2;
 }
 
 message UpdatePartSchemaRequest {
     string name = 1;
-    PartSchema part = 2;
+    PartSchema schema = 2;
     google.protobuf.FieldMask update_mask = 3;
 }
 

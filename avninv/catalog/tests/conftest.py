@@ -8,6 +8,7 @@ import pytest
 import yaml
 
 from avninv.catalog.catalog import CatalogService
+from avninv.catalog.v1.catalog_pb2 import PartSchema, PartAttributeSchema, CreatePartSchemaRequest
 from avninv.catalog.v1.catalog_pb2_grpc import add_CatalogServicer_to_server, CatalogStub
 
 
@@ -27,16 +28,47 @@ def _get_config():
 def service():
     config = yaml.load(_get_config(), Loader=yaml.CLoader)
     client = pymongo.MongoClient(config['database'][0], serverSelectionTimeoutMS=1000)
-    collection = str(uuid.uuid4())
+    parts_collection = str(uuid.uuid4())
+    schemas_collection = str(uuid.uuid4())
 
-    client['catalog-test'].create_collection(collection)
+    client['catalog-test'].create_collection(parts_collection)
+    client['catalog-test'].create_collection(schemas_collection)
 
     server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=1))
-    add_CatalogServicer_to_server(CatalogService(client['catalog-test'][collection]), server)
+    add_CatalogServicer_to_server(
+        CatalogService(
+            client['catalog-test'][parts_collection],
+            client['catalog-test'][schemas_collection]
+        ),
+        server
+    )
     server.add_insecure_port('0.0.0.0:9321')
     server.start()
 
     yield CatalogStub(grpc.insecure_channel('0.0.0.0:9321'))
 
     server.stop(0)
-    client['catalog-test'].drop_collection(collection)
+    client['catalog-test'].drop_collection(parts_collection)
+    client['catalog-test'].drop_collection(schemas_collection)
+
+
+@pytest.fixture
+def schema(service):
+    schema = PartSchema(
+        display_name='Resistor',
+        attributes=[
+            PartAttributeSchema(
+                attribute='resistance',
+                unit='Ohms',
+                type=PartAttributeSchema.Type.NUMERIC
+            ),
+            PartAttributeSchema(
+                attribute='footprint',
+                type=PartAttributeSchema.Type.STRING
+            )
+        ]
+    )
+
+    result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main/partschemas', schema=schema))
+    schema.name = result.name
+    return schema
