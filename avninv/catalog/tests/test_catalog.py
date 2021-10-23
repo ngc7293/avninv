@@ -5,24 +5,25 @@ import pytest
 
 from avninv.catalog.catalog import CatalogService
 from avninv.catalog.v1.catalog_pb2 import (
-    _PARTATTRIBUTESCHEMA_TYPE, CreatePartRequest, CreatePartSchemaRequest, DeletePartRequest, DeletePartSchemaRequest, GetPartRequest, GetPartSchemaRequest, ListPartRequest, PartAttribute, Part, PartAttributeSchema, PartSchema, PartSupplier, UpdatePartRequest
+    CreatePartRequest, CreatePartSchemaRequest, DeletePartRequest, DeletePartSchemaRequest, GetPartRequest,
+    GetPartSchemaRequest, ListPartRequest, ListPartSchemaRequest, PartAttribute, Part, PartAttributeSchema, PartSchema,
+    PartSupplier, UpdatePartRequest
 )
 from avninv.error.api_error import ApiError
 
 
 @pytest.mark.parametrize("path,valid", [
-    ('org/main/parts/wee', False),
-    ('org/main/parts', False),
-    ('orgs/other/parts', False),
-    ('orgs/main/part', False),
-    ('orgs/main/parts', True)
+    ('org/main/wee', False),
+    ('org/main', False),
+    ('orgs/other', False),
+    ('orgs/main', True)
 ])
 def test_validate_parent(path, valid):
     if not valid:
         with pytest.raises(ApiError):
-            CatalogService._validate_parent(path, 'parts', 'main')
+            CatalogService._validate_parent(path, 'main')
     else:
-        assert CatalogService._validate_parent(path, 'parts', 'main') == 'main'
+        assert CatalogService._validate_parent(path, 'main') == 'main'
 
 
 @pytest.mark.parametrize("path,valid", [
@@ -63,7 +64,7 @@ class TestParts:
             ]
         )
 
-        result = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1))
+        result = service.CreatePart(CreatePartRequest(parent='orgs/main', part=p1))
         assert result.name.startswith('orgs/main/parts/')
         assert len(result.name.split('/')[-1]) == 24
 
@@ -75,7 +76,7 @@ class TestParts:
         )
 
         with pytest.raises(grpc.RpcError) as error:
-            service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1))
+            service.CreatePart(CreatePartRequest(parent='orgs/main', part=p1))
         assert error.value.code() == grpc.StatusCode.NOT_FOUND, error.value.details()
 
     def test_GetPart(self, service, schema):
@@ -100,7 +101,7 @@ class TestParts:
             ]
         )
 
-        name = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name
+        name = service.CreatePart(CreatePartRequest(parent='orgs/main', part=p1)).name
         p1.name = name
 
         result = service.GetPart(GetPartRequest(name=name))
@@ -137,7 +138,7 @@ class TestParts:
             description='RES 10K 0502',
         )
 
-        name = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name
+        name = service.CreatePart(CreatePartRequest(parent='orgs/main', part=p1)).name
         service.DeletePart(DeletePartRequest(name=name))
 
         with pytest.raises(grpc.RpcError) as error:
@@ -185,7 +186,7 @@ class TestParts:
             ]
         )
 
-        name = service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name
+        name = service.CreatePart(CreatePartRequest(parent='orgs/main', part=p1)).name
 
         p2 = Part(
             description='RES 10K 0203',
@@ -262,10 +263,10 @@ class TestParts:
         )
 
         names = []
-        names.append(service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name)
-        names.append(service.CreatePart(CreatePartRequest(parent='orgs/main/parts', part=p1)).name)
+        names.append(service.CreatePart(CreatePartRequest(parent='orgs/main', part=p1)).name)
+        names.append(service.CreatePart(CreatePartRequest(parent='orgs/main', part=p1)).name)
 
-        response = service.ListParts(ListPartRequest(parent='orgs/main/parts'))
+        response = service.ListParts(ListPartRequest(parent='orgs/main'))
         assert names == [part.name for part in response.parts]
 
 
@@ -283,8 +284,8 @@ class TestPartSchema:
             ]
         )
 
-        result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main/partschemas', schema=m1))
-        assert result.name.startswith('orgs/main/partschemas')
+        result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main', part_schema=m1))
+        assert result.name.startswith('orgs/main/partschemas/')
         assert len(result.name.split('/')) == 4
 
     def test_GetPartSchema(self, service):
@@ -300,7 +301,7 @@ class TestPartSchema:
             ]
         )
 
-        result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main/partschemas', schema=m1))
+        result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main', part_schema=m1))
         m1.name = result.name
         assert service.GetPartSchema(GetPartSchemaRequest(name=result.name)) == m1
 
@@ -310,7 +311,7 @@ class TestPartSchema:
             display_name='Resistor'
         )
 
-        result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main/partschemas', schema=m1))
+        result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main', part_schema=m1))
         service.DeletePartSchema(DeletePartSchemaRequest(name=result.name))
 
         with pytest.raises(grpc.RpcError) as error:
@@ -331,8 +332,8 @@ class TestPartSchema:
         )
 
         names = []
-        names.append(service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main/partschemas', schema=m1)).name)
-        names.append(service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main/partschemas', schema=m1)).name)
+        names.append(service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main', part_schema=m1)).name)
+        names.append(service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main', part_schema=m1)).name)
 
-        response = service.ListPartSchemas(ListPartRequest(parent='orgs/main/partschemas'))
-        assert names == [schema.name for schema in response.schemas]
+        response = service.ListPartSchemas(ListPartSchemaRequest(parent='orgs/main'))
+        assert names == [schema.name for schema in response.part_schemas]

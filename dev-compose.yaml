@@ -1,0 +1,24 @@
+version: '3.9'
+services:
+  catalog:
+    build:
+      context: .
+      args: 
+        config_file: etc/config.local.yaml
+      dockerfile: catalog.dockerfile
+    links:
+      - mongo
+    ports:
+      - 9320:9320/tcp
+  envoy:
+    build:
+      context: .
+      dockerfile: envoy.dockerfile
+    links:
+      - catalog
+    ports:
+      - 8081-8082:8081-8082/tcp
+  mongo:
+    image: mongo:latest
+    expose:
+      - 27017/tcp

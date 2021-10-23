@@ -31,7 +31,7 @@ service Catalog {
 
     rpc UpdatePart(UpdatePartRequest) returns (Part) {
         option (google.api.http) = {
-            patch: "/v1/{name=orgs/*/parts/*}"
+            patch: "/v1/{part.name=orgs/*}/parts/*"
             body: "part"
         };
     };
@@ -64,7 +64,7 @@ service Catalog {
 
     rpc UpdatePartSchema(UpdatePartSchemaRequest) returns (PartSchema) {
         option (google.api.http) = {
-            patch: "/v1/{name=orgs/*/partschemas/*}"
+            patch: "/v1/{part_schema.name=orgs/*/partschemas/*}"
             body: "part_schema"
         };
     };
@@ -114,7 +114,7 @@ message ListPartSchemaRequest {
 }
 
 message ListPartSchemaResponse {
-    repeated PartSchema schemas = 1;
+    repeated PartSchema part_schemas = 1;
     string next_page_token = 2;
 }
 
@@ -124,12 +124,12 @@ message GetPartSchemaRequest {
 
 message CreatePartSchemaRequest {
     string parent = 1;
-    PartSchema schema = 2;
+    PartSchema part_schema = 2;
 }
 
 message UpdatePartSchemaRequest {
     string name = 1;
-    PartSchema schema = 2;
+    PartSchema part_schema = 2;
     google.protobuf.FieldMask update_mask = 3;
 }
 

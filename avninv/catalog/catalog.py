@@ -18,7 +18,7 @@ class CatalogService(CatalogServicer):
 
     def CreatePart(self, request, context):
         try:
-            self._validate_parent(request.parent, 'parts', require_org='main')
+            self._validate_parent(request.parent, require_org='main')
             schema = self.GetPartSchema(GetPartSchemaRequest(name=request.part.schema_name), context)
             id = self.parts.insert(request.part)
             return self.parts.get(id)
@@ -42,7 +42,7 @@ class CatalogService(CatalogServicer):
 
     def ListParts(self, request, context):
         try:
-            self._validate_parent(request.parent, 'parts', require_org='main')
+            self._validate_parent(request.parent, require_org='main')
             parts = list(self.parts.list())
             return ListPartResponse(parts=parts)
         except ApiError as err:
@@ -60,8 +60,8 @@ class CatalogService(CatalogServicer):
 
     def CreatePartSchema(self, request, context):
         try:
-            self._validate_parent(request.parent, 'partschemas', require_org='main')
-            id = self.schemas.insert(request.schema)
+            self._validate_parent(request.parent, require_org='main')
+            id = self.schemas.insert(request.part_schema)
             return self.schemas.get(id)
         except ApiError as err:
             context.abort(err.status, err.message)
@@ -86,16 +86,16 @@ class CatalogService(CatalogServicer):
 
     def ListPartSchemas(self, request, context):
         try:
-            self._validate_parent(request.parent, 'partschemas', require_org='main')
+            self._validate_parent(request.parent, require_org='main')
             schemas = list(self.schemas.list())
-            return ListPartSchemaResponse(schemas=schemas)
+            return ListPartSchemaResponse(part_schemas=schemas)
         except ApiError as err:
             context.abort(err.status, err.message)
 
     def UpdatePartSchema(self, request, context):
         try:
             _, oid = self._validate_name(request.name, 'partschemas', require_org='main')
-            self.schemas.update(oid, request.schema, fields_mask=request.update_mask.paths)
+            self.schemas.update(oid, request.part_schema, fields_mask=request.update_mask.paths)
             return self.schemas.get(oid)
         except ApiError as err:
             context.abort(err.status, err.message)
@@ -110,9 +110,9 @@ class CatalogService(CatalogServicer):
         return True, None
 
     @staticmethod
-    def _validate_parent(parent, collection, require_org=None):
+    def _validate_parent(parent, require_org=None):
         tokens = parent.split('/')
-        valid, _ = CatalogService._validate_path(tokens, ['orgs', require_org, collection])
+        valid, _ = CatalogService._validate_path(tokens, ['orgs', require_org])
 
         if not valid:
             raise ApiError(StatusCode.INVALID_ARGUMENT, 'Invalid parent')

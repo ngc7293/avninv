@@ -1,16 +1,18 @@
 FROM python:slim-buster
 
-COPY requirements.txt /opt/avninv/requirements.txt
-COPY BUILD.sh /opt/avninv/BUILD.sh
+ARG config_file
 
-WORKDIR /opt/avninv
+COPY requirements.txt /app/avninv/requirements.txt
+COPY BUILD.sh /app/avninv/BUILD.sh
+
+WORKDIR /app/avninv
 RUN pip install -r requirements.txt
 
-COPY avninv /opt/avninv/avninv
-COPY google /opt/avninv/google
-COPY etc/config.docker.yaml /opt/avninv/config.docker.yaml
+COPY avninv /app/avninv/avninv
+COPY google /app/avninv/google
+COPY $config_file /app/avninv/config.yaml
 RUN ./BUILD.sh
 
-WORKDIR /opt/avninv
+WORKDIR /app/avninv
 EXPOSE 9320
-ENTRYPOINT [ "python", "-m", "avninv.catalog", "-c", "config.docker.yaml" ]
+ENTRYPOINT [ "python", "-m", "avninv.catalog", "-c", "config.yaml" ]

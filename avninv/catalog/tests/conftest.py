@@ -71,6 +71,6 @@ def schema(service):
         ]
     )
 
-    result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main/partschemas', schema=schema))
+    result = service.CreatePartSchema(CreatePartSchemaRequest(parent='orgs/main', part_schema=schema))
     schema.name = result.name
     return schema
